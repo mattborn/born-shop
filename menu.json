@@ -1,0 +1,34 @@
+[
+  {
+    "items": [
+      { "emoji": "☕", "id": "coffee", "mods": [{ "name": "Cream", "price": 0 }, { "name": "Sugar", "price": 0 }], "name": "Coffee", "price": 2.5 },
+      { "emoji": "🍵", "id": "tea", "name": "Tea", "price": 2 },
+      { "emoji": "💧", "id": "water", "name": "Water", "price": 1 },
+      { "emoji": "🥛", "id": "milk", "name": "Milk", "price": 1.5 },
+      { "emoji": "🧃", "id": "oj", "name": "Orange Juice", "price": 2.5 }
+    ],
+    "name": "Drinks"
+  },
+  {
+    "items": [
+      { "emoji": "🍔", "id": "hamburger", "mods": [{ "name": "Lettuce", "price": 0 }, { "name": "Tomato", "price": 0 }, { "name": "Pickles", "price": 0 }, { "name": "Mushrooms", "price": 0.5 }, { "name": "Cheese", "price": 0.5 }], "name": "Hamburger", "price": 6 },
+      { "emoji": "🧀", "id": "cheeseburger", "mods": [{ "name": "Lettuce", "price": 0 }, { "name": "Tomato", "price": 0 }, { "name": "Pickles", "price": 0 }, { "name": "Mushrooms", "price": 0.5 }], "name": "Cheeseburger", "price": 6.5 },
+      { "emoji": "🥞", "id": "pancakes", "name": "Pancakes", "price": 5.5 }
+    ],
+    "name": "Mains"
+  },
+  {
+    "items": [
+      { "emoji": "🍓", "id": "fruit", "name": "Fruit", "price": 3 },
+      { "emoji": "🥦", "id": "veggies", "name": "Veggies", "price": 3 },
+      { "emoji": "🥔", "id": "potatoes", "name": "Potatoes", "price": 3.5 }
+    ],
+    "name": "Sides"
+  },
+  {
+    "items": [
+      { "emoji": "🍪", "id": "macaroons", "name": "Macaroons", "price": 4 }
+    ],
+    "name": "Sweets"
+  }
+]

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Little Shop POS</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>" />
+</head>
+<body>
+  <main id="pos">
+    <section id="menu">
+      <header id="menu-bar">
+        <h1>🛒 <span id="brand">Little Shop</span></h1>
+        <button id="settings-btn" title="Settings">⚙️</button>
+      </header>
+      <p id="greeting"></p>
+      <div id="grid"></div>
+    </section>
+
+    <aside id="receipt-panel">
+      <div id="receipt"></div>
+      <div id="actions">
+        <button id="clear-btn" class="ghost">Clear</button>
+        <button id="charge-btn">Charge</button>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Modifier picker -->
+  <div id="mod-overlay" class="overlay" hidden>
+    <div class="sheet">
+      <h2 id="mod-title"></h2>
+      <div id="mod-list"></div>
+      <div class="sheet-actions">
+        <button id="mod-cancel" class="ghost">Cancel</button>
+        <button id="mod-add">Add to order</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="settings-overlay" class="overlay" hidden>
+    <div class="sheet">
+      <h2>⚙️ Settings</h2>
+      <form id="settings-form">
+        <label>Store name <input name="store" /></label>
+        <label>Server name <input name="server" /></label>
+        <label>Location <input name="location" /></label>
+        <label>Phone <input name="phone" /></label>
+        <label>Tax rate (%) <input name="taxRate" type="number" step="0.001" min="0" /></label>
+        <label>Currency symbol <input name="currency" maxlength="3" /></label>
+        <label>Next order # <input name="orderNo" type="number" min="1" /></label>
+        <label>Receipt footer <input name="footer" /></label>
+      </form>
+      <div class="sheet-actions">
+        <button id="settings-reset" class="ghost" type="button">Reset defaults</button>
+        <button id="settings-save" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
