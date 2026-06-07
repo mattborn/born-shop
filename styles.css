@@ -172,11 +172,6 @@ h1 {
   font-size: 0.875rem;
 }
 
-.tile .badge {
-  color: var(--accent);
-  font-size: 0.75rem;
-}
-
 /* Receipt */
 #receipt-panel {
   background: var(--card);
@@ -349,6 +344,19 @@ button:hover {
   display: grid;
   gap: 0.5rem;
   margin-bottom: 1rem;
+}
+
+.mod-group {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+}
+
+.mod-group:first-child {
+  margin-top: 0;
 }
 
 .mod-row {

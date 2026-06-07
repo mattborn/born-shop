@@ -43,18 +43,17 @@ const el = (tag, props = {}, kids = []) => {
 
 // --- Cart ---------------------------------------------------------------
 const lineTotal = (l) => (l.price + l.mods.reduce((s, m) => s + m.price, 0)) * l.qty
-const keyOf = (item, mods) => item.id + '|' + mods.map((m) => m.name).sort().join(',')
 const totals = () => {
   const subtotal = cart.reduce((s, l) => s + lineTotal(l), 0)
   const tax = subtotal * (config.taxRate / 100)
   return { subtotal, tax, total: subtotal + tax }
 }
 
-const addToCart = (item, mods = []) => {
-  const key = keyOf(item, mods)
+const addToCart = (item, size = null, mods = []) => {
+  const key = `${item.id}|${size ? size.name : ''}|${mods.map((m) => m.name).sort().join(',')}`
   const found = cart.find((l) => l.key === key)
   if (found) found.qty++
-  else cart.push({ emoji: item.emoji, key, mods, name: item.name, price: item.price, qty: 1 })
+  else cart.push({ emoji: item.emoji, key, mods, name: size ? `${item.name} (${size.name})` : item.name, price: size ? size.price : item.price, qty: 1 })
   persistCart()
 }
 
@@ -105,9 +104,8 @@ const renderMenu = () => {
       const tile = el('button', { className: 'tile', onclick: () => pick(item) }, [
         el('span', { className: 'emoji', textContent: item.emoji }),
         el('span', { className: 'name', textContent: item.name }),
-        el('span', { className: 'price', textContent: money(item.price) }),
+        el('span', { className: 'price', textContent: item.sizes ? 'from ' + money(Math.min(...item.sizes.map((s) => s.price))) : money(item.price) }),
       ])
-      if (item.mods) tile.append(el('span', { className: 'badge', textContent: '+ options' }))
       tiles.append(tile)
     })
     grid.append(el('section', { className: 'cat' }, [el('h2', { textContent: cat.name }), tiles]))
@@ -161,27 +159,44 @@ const renderOrder = () => {
 
 // --- Modifier sheet -----------------------------------------------------
 const pick = (item) => {
-  if (!item.mods) return addToCart(item)
-  pending = { chosen: new Set(), item }
+  if (!item.sizes && !item.mods) return addToCart(item)
+  pending = { item, mods: new Set(), size: item.sizes?.[0] ?? null }
   $('mod-title').textContent = `${item.emoji} ${item.name}`
   const list = $('mod-list')
   list.replaceChildren()
-  item.mods.forEach((m) => {
-    const row = el('div', { className: 'mod-row' }, [
-      el('span', { textContent: m.name }),
-      el('span', { className: 'mod-price', textContent: m.price ? '+' + money(m.price) : 'free' }),
-    ])
-    row.onclick = () => {
-      pending.chosen.has(m) ? pending.chosen.delete(m) : pending.chosen.add(m)
-      row.classList.toggle('on')
-    }
-    list.append(row)
-  })
+  if (item.sizes) {
+    list.append(el('div', { className: 'mod-group', textContent: 'Size' }))
+    item.sizes.forEach((s) => {
+      const row = el('div', { className: 'mod-row size-row' + (s === pending.size ? ' on' : '') }, [
+        el('span', { textContent: s.name }),
+        el('span', { className: 'mod-price', textContent: money(s.price) }),
+      ])
+      row.onclick = () => {
+        pending.size = s
+        list.querySelectorAll('.size-row').forEach((r) => r.classList.toggle('on', r === row))
+      }
+      list.append(row)
+    })
+  }
+  if (item.mods) {
+    list.append(el('div', { className: 'mod-group', textContent: 'Add-ons' }))
+    item.mods.forEach((m) => {
+      const row = el('div', { className: 'mod-row' }, [
+        el('span', { textContent: m.name }),
+        el('span', { className: 'mod-price', textContent: m.price ? '+' + money(m.price) : 'free' }),
+      ])
+      row.onclick = () => {
+        pending.mods.has(m) ? pending.mods.delete(m) : pending.mods.add(m)
+        row.classList.toggle('on')
+      }
+      list.append(row)
+    })
+  }
   $('mod-overlay').hidden = false
 }
 
 $('mod-add').onclick = () => {
-  addToCart(pending.item, [...pending.chosen])
+  addToCart(pending.item, pending.size, [...pending.mods])
   $('mod-overlay').hidden = true
 }
 $('mod-cancel').onclick = () => ($('mod-overlay').hidden = true)

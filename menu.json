@@ -1,11 +1,12 @@
 [
   {
     "items": [
-      { "emoji": "☕", "id": "coffee", "mods": [{ "name": "Cream", "price": 0 }, { "name": "Sugar", "price": 0 }], "name": "Coffee", "price": 2.5 },
-      { "emoji": "🥛", "id": "milk", "name": "Milk", "price": 1.5 },
-      { "emoji": "🧃", "id": "oj", "name": "Orange Juice", "price": 2.5 },
-      { "emoji": "🍵", "id": "tea", "name": "Tea", "price": 2 },
-      { "emoji": "💧", "id": "water", "name": "Water", "price": 0 }
+      { "emoji": "☕", "id": "coffee", "mods": [{ "name": "Cream", "price": 0 }, { "name": "Sugar", "price": 0 }], "name": "Coffee", "sizes": [{ "name": "Small", "price": 2 }, { "name": "Medium", "price": 2.5 }, { "name": "Large", "price": 3 }] },
+      { "emoji": "🥛", "id": "milk", "name": "Milk", "sizes": [{ "name": "Small", "price": 1 }, { "name": "Medium", "price": 1.5 }, { "name": "Large", "price": 2 }] },
+      { "emoji": "🧃", "id": "oj", "name": "Orange Juice", "sizes": [{ "name": "Small", "price": 2 }, { "name": "Medium", "price": 2.5 }, { "name": "Large", "price": 3 }] },
+      { "emoji": "🥤", "id": "soda", "name": "Soda", "sizes": [{ "name": "Small", "price": 1.5 }, { "name": "Medium", "price": 2 }, { "name": "Large", "price": 2.5 }] },
+      { "emoji": "🍵", "id": "tea", "name": "Tea", "sizes": [{ "name": "Small", "price": 1.5 }, { "name": "Medium", "price": 2 }, { "name": "Large", "price": 2.5 }] },
+      { "emoji": "💧", "id": "water", "name": "Water", "sizes": [{ "name": "Small", "price": 0 }, { "name": "Medium", "price": 0 }, { "name": "Large", "price": 0 }] }
     ],
     "name": "Drinks"
   },
