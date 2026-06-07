@@ -2,9 +2,10 @@
   {
     "items": [
       { "emoji": "☕", "id": "coffee", "mods": [{ "name": "Cream", "price": 0 }, { "name": "Sugar", "price": 0 }], "name": "Coffee", "sizes": [{ "name": "Small", "price": 2 }, { "name": "Medium", "price": 2.5 }, { "name": "Large", "price": 3 }] },
-      { "emoji": "🥛", "id": "milk", "name": "Milk", "sizes": [{ "name": "Small", "price": 1 }, { "name": "Medium", "price": 1.5 }, { "name": "Large", "price": 2 }] },
+      { "choiceLabel": "Type", "choices": ["2%", "Whole", "Chocolate"], "emoji": "🥛", "id": "milk", "name": "Milk", "sizes": [{ "name": "Small", "price": 1 }, { "name": "Medium", "price": 1.5 }, { "name": "Large", "price": 2 }] },
       { "emoji": "🧃", "id": "oj", "name": "Orange Juice", "sizes": [{ "name": "Small", "price": 2 }, { "name": "Medium", "price": 2.5 }, { "name": "Large", "price": 3 }] },
       { "emoji": "🥤", "id": "soda", "name": "Soda", "sizes": [{ "name": "Small", "price": 1.5 }, { "name": "Medium", "price": 2 }, { "name": "Large", "price": 2.5 }] },
+      { "emoji": "🫧", "id": "sparkling", "name": "Sparkling Water", "sizes": [{ "name": "Small", "price": 1.5 }, { "name": "Medium", "price": 2 }, { "name": "Large", "price": 2.5 }] },
       { "emoji": "🍵", "id": "tea", "name": "Tea", "sizes": [{ "name": "Small", "price": 1.5 }, { "name": "Medium", "price": 2 }, { "name": "Large", "price": 2.5 }] },
       { "emoji": "💧", "id": "water", "name": "Water", "sizes": [{ "name": "Small", "price": 0 }, { "name": "Medium", "price": 0 }, { "name": "Large", "price": 0 }] }
     ],
@@ -23,10 +24,14 @@
   },
   {
     "items": [
+      { "emoji": "🍎", "id": "apples", "name": "Apple Slices", "price": 2.5 },
       { "emoji": "🥓", "id": "bacon", "name": "Bacon", "price": 3 },
+      { "choiceLabel": "Toasting", "choices": ["Not Toasted", "Lightly Toasted", "Toasted"], "emoji": "🥯", "id": "bagel", "mods": [{ "name": "Butter", "price": 0 }, { "name": "Plain Cream Cheese", "price": 0.5 }, { "name": "Strawberry Cream Cheese", "price": 0.5 }], "name": "Bagel", "price": 2.5 },
       { "emoji": "🍳", "id": "eggs", "name": "Eggs", "price": 2.5 },
       { "emoji": "🍓", "id": "fruit", "name": "Fruit", "price": 3 },
-      { "emoji": "🥔", "id": "potatoes", "name": "Potatoes", "price": 3.5 },
+      { "emoji": "🥖", "id": "garlicbread", "name": "Garlic Bread", "price": 3.5 },
+      { "choiceLabel": "Style", "choices": ["Baked", "Diced", "Mashed"], "emoji": "🥔", "id": "potatoes", "name": "Potatoes", "price": 3.5 },
+      { "emoji": "🍞", "id": "toast", "name": "Toast", "price": 2 },
       { "emoji": "🥦", "id": "veggies", "name": "Veggies", "price": 3 }
     ],
     "name": "Sides"
