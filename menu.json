@@ -13,9 +13,11 @@
   {
     "items": [
       { "emoji": "⭐", "id": "special", "name": "Daily Special", "price": 7.5 },
+      { "emoji": "🫓", "id": "biscuits", "name": "Biscuits & Gravy", "price": 5 },
       { "emoji": "🧀", "id": "cheeseburger", "mods": [{ "name": "Lettuce", "price": 0 }, { "name": "Tomato", "price": 0 }, { "name": "Pickles", "price": 0 }, { "name": "Mushrooms", "price": 0.5 }], "name": "Cheeseburger", "price": 6.5 },
       { "emoji": "🍔", "id": "hamburger", "mods": [{ "name": "Lettuce", "price": 0 }, { "name": "Tomato", "price": 0 }, { "name": "Pickles", "price": 0 }, { "name": "Mushrooms", "price": 0.5 }, { "name": "Cheese", "price": 0.5 }], "name": "Hamburger", "price": 6 },
-      { "emoji": "🥞", "id": "pancakes", "name": "Pancakes", "price": 5.5 }
+      { "emoji": "🥞", "id": "pancakes", "name": "Pancakes", "price": 5.5 },
+      { "choiceLabel": "Flavor", "choices": ["Chicken Noodle", "Tomato", "Soup of the Day"], "emoji": "🍲", "id": "soup", "name": "Soup", "sizes": [{ "name": "Cup", "price": 3 }, { "name": "Bowl", "price": 5 }] }
     ],
     "name": "Mains"
   },
@@ -31,7 +33,9 @@
   },
   {
     "items": [
-      { "emoji": "🍪", "id": "macaroons", "name": "Macaroons", "price": 4 }
+      { "emoji": "🍨", "id": "icecream", "name": "Ice Cream", "price": 3 },
+      { "emoji": "🍪", "id": "macaroons", "name": "Macaroons", "price": 4 },
+      { "emoji": "🧁", "id": "minicake", "name": "Mini Cake", "price": 3.5 }
     ],
     "name": "Sweets"
   }

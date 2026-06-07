@@ -14,6 +14,7 @@ const DEFAULTS = {
 
 const STATUSES = ['New', 'Preparing', 'Ready', 'Done']
 const PAY_STEPS = ['Connecting…', 'Reading card…', 'Contacting bank…', 'Authorizing…']
+const TIPS = [0, 0.15, 0.18, 0.2]
 const GREETINGS = [
   (c) => `Welcome to ${c.store}! I'm ${c.server} — what can I get started for you? 😊`,
   (c) => `Hi there! ${c.server} here at ${c.store}. What would you like today? 🍔`,
@@ -31,9 +32,11 @@ let orders = load('pos-orders', [])
 let view = 'order'
 let pending = null // item awaiting modifier selection
 let paying = false
+let tip = 0 // tip in dollars
+let tipKey = 0 // selected tip button: a TIPS percent, or 'custom'
 
 const $ = (id) => document.getElementById(id)
-const money = (n) => config.currency + n.toFixed(2)
+const money = (n) => config.currency + n.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })
 const time = (t) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 const el = (tag, props = {}, kids = []) => {
   const node = Object.assign(document.createElement(tag), props)
@@ -49,11 +52,12 @@ const totals = () => {
   return { subtotal, tax, total: subtotal + tax }
 }
 
-const addToCart = (item, size = null, mods = []) => {
-  const key = `${item.id}|${size ? size.name : ''}|${mods.map((m) => m.name).sort().join(',')}`
+const addToCart = (item, { choice = null, mods = [], size = null } = {}) => {
+  const labels = [size?.name, choice].filter(Boolean)
+  const key = `${item.id}|${[size?.name, choice, ...mods.map((m) => m.name).sort()].filter(Boolean).join('|')}`
   const found = cart.find((l) => l.key === key)
   if (found) found.qty++
-  else cart.push({ emoji: item.emoji, key, mods, name: size ? `${item.name} (${size.name})` : item.name, price: size ? size.price : item.price, qty: 1 })
+  else cart.push({ emoji: item.emoji, key, mods, name: labels.length ? `${item.name} (${labels.join(', ')})` : item.name, price: size ? size.price : item.price, qty: 1 })
   persistCart()
 }
 
@@ -70,14 +74,16 @@ const persistCart = () => {
   render()
 }
 
-const commitOrder = (method) => {
+const commitOrder = (method, tipAmt = 0) => {
   const { subtotal, tax, total } = totals()
-  orders.push({ items: cart, method, no: config.orderNo, server: config.server, status: 'New', subtotal, tax, time: new Date().toISOString(), total })
+  orders.push({ items: cart, method, no: config.orderNo, server: config.server, status: 'New', subtotal, tax, time: new Date().toISOString(), tip: tipAmt, total: total + tipAmt })
   save('pos-orders', orders)
   config.orderNo = Number(config.orderNo) + 1
   save('pos-config', config)
   cart = []
   save('pos-cart', cart)
+  tip = 0
+  tipKey = 0
 }
 
 // --- Views --------------------------------------------------------------
@@ -159,8 +165,8 @@ const renderOrder = () => {
 
 // --- Modifier sheet -----------------------------------------------------
 const pick = (item) => {
-  if (!item.sizes && !item.mods) return addToCart(item)
-  pending = { item, mods: new Set(), size: item.sizes?.[0] ?? null }
+  if (!item.sizes && !item.choices && !item.mods) return addToCart(item)
+  pending = { choice: item.choices?.[0] ?? null, item, mods: new Set(), size: item.sizes?.[0] ?? null }
   $('mod-title').textContent = `${item.emoji} ${item.name}`
   const list = $('mod-list')
   list.replaceChildren()
@@ -174,6 +180,17 @@ const pick = (item) => {
       row.onclick = () => {
         pending.size = s
         list.querySelectorAll('.size-row').forEach((r) => r.classList.toggle('on', r === row))
+      }
+      list.append(row)
+    })
+  }
+  if (item.choices) {
+    list.append(el('div', { className: 'mod-group', textContent: item.choiceLabel ?? 'Choose' }))
+    item.choices.forEach((c) => {
+      const row = el('div', { className: 'mod-row choice-row' + (c === pending.choice ? ' on' : '') }, [el('span', { textContent: c })])
+      row.onclick = () => {
+        pending.choice = c
+        list.querySelectorAll('.choice-row').forEach((r) => r.classList.toggle('on', r === row))
       }
       list.append(row)
     })
@@ -196,7 +213,7 @@ const pick = (item) => {
 }
 
 $('mod-add').onclick = () => {
-  addToCart(pending.item, pending.size, [...pending.mods])
+  addToCart(pending.item, { choice: pending.choice, mods: [...pending.mods], size: pending.size })
   $('mod-overlay').hidden = true
 }
 $('mod-cancel').onclick = () => ($('mod-overlay').hidden = true)
@@ -227,11 +244,34 @@ const renderPayment = () => {
     root.append(el('div', { className: 'r-empty', textContent: 'No active order — add items on the Order screen.' }))
     return
   }
+  const { subtotal, total } = totals()
+  const amount = el('div', { className: 'pay-amount', textContent: money(total + tip) })
+  const tipLabel = el('div', { className: 'pay-tip-label', textContent: tip ? `Includes ${money(tip)} tip` : 'Add a tip?' })
+  const tips = el('div', { className: 'pay-tips' })
+  TIPS.forEach((p) => {
+    const b = el('button', { className: 'pay-tip' + (tipKey === p ? ' on' : ''), textContent: p ? `${Math.round(p * 100)}%` : 'No tip' })
+    b.onclick = () => !paying && ((tipKey = p), (tip = subtotal * p), renderPayment())
+    tips.append(b)
+  })
+  const customBtn = el('button', { className: 'pay-tip' + (tipKey === 'custom' ? ' on' : ''), textContent: 'Custom' })
+  customBtn.onclick = () => !paying && ((tipKey = 'custom'), (tip = 0), renderPayment())
+  tips.append(customBtn)
+  root.append(el('div', { className: 'pay-label', textContent: 'Amount due' }), amount, tipLabel, tips)
+
+  if (tipKey === 'custom') {
+    const input = el('input', { className: 'pay-custom', inputMode: 'decimal', min: '0', placeholder: '0.00', step: '0.25', type: 'number', value: tip || '' })
+    input.oninput = () => {
+      tip = Math.max(0, Number(input.value) || 0)
+      amount.textContent = money(total + tip)
+      tipLabel.textContent = tip ? `Includes ${money(tip)} tip` : 'Add a tip?'
+    }
+    root.append(input)
+    setTimeout(() => input.focus(), 0)
+  }
+
   const status = el('div', { className: 'pay-status' })
   const tap = el('button', { className: 'pay-tap' }, [el('span', { textContent: '📱💳' }), el('div', { textContent: 'Tap to Pay' })])
   tap.onclick = () => startPayment(tap, status)
-  root.append(el('div', { className: 'pay-label', textContent: 'Amount due' }))
-  root.append(el('div', { className: 'pay-amount', textContent: money(totals().total) }))
   root.append(tap)
   root.append(status)
 }
@@ -250,7 +290,7 @@ const startPayment = (tap, status) => {
       status.textContent = 'Approved ✅'
       ding()
       setTimeout(() => {
-        commitOrder('Contactless')
+        commitOrder('Contactless', tip)
         paying = false
         setView('kitchen')
       }, 1800)
@@ -306,10 +346,12 @@ const renderFinance = () => {
   const todays = orders.filter((o) => new Date(o.time).toDateString() === today)
   const revenue = todays.reduce((s, o) => s + o.total, 0)
   const tax = todays.reduce((s, o) => s + o.tax, 0)
+  const tips = todays.reduce((s, o) => s + (o.tip ?? 0), 0)
 
   root.append(el('div', { className: 'fin-summary' }, [
     stat(money(revenue), "Today's revenue"),
     stat(String(todays.length), 'Orders'),
+    stat(money(tips), 'Tips'),
     stat(money(tax), 'Tax collected'),
   ]))
 
@@ -317,10 +359,10 @@ const renderFinance = () => {
     const tbody = el('tbody')
     todays.slice().reverse().forEach((o) => {
       const count = o.items.reduce((s, l) => s + l.qty, 0)
-      tbody.append(row('td', [`#${o.no}`, time(o.time), o.server, `${count} item${count === 1 ? '' : 's'}`, o.method, o.status, money(o.total)]))
+      tbody.append(row('td', [`#${o.no}`, time(o.time), o.server, `${count} item${count === 1 ? '' : 's'}`, o.method, o.status, money(o.tip ?? 0), money(o.total)]))
     })
     root.append(el('table', { className: 'fin-table' }, [
-      el('thead', {}, [row('th', ['#', 'Time', 'Server', 'Items', 'Payment', 'Status', 'Total'])]),
+      el('thead', {}, [row('th', ['#', 'Time', 'Server', 'Items', 'Payment', 'Status', 'Tip', 'Total'])]),
       tbody,
     ]))
   } else {
@@ -341,6 +383,8 @@ $('views').onclick = (e) => e.target.dataset.view && setView(e.target.dataset.vi
 $('charge-btn').onclick = () => cart.length && setView('payment')
 $('clear-btn').onclick = () => {
   cart = []
+  tip = 0
+  tipKey = 0
   persistCart()
 }
 

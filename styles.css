@@ -426,6 +426,39 @@ input {
   font-weight: 700;
 }
 
+.pay-tip-label {
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.pay-tips {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pay-tip {
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  min-width: 4.5rem;
+}
+
+.pay-tip:hover {
+  background: var(--line);
+}
+
+.pay-tip.on {
+  background: var(--accent);
+  color: #fff;
+}
+
+.pay-custom {
+  font-size: 1.5rem;
+  margin-top: 0.75rem;
+  max-width: 10rem;
+  text-align: center;
+}
+
 .pay-tap {
   align-items: center;
   border-radius: 50%;
