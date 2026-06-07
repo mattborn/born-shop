@@ -12,29 +12,50 @@ const DEFAULTS = {
   taxRate: 9.25,
 }
 
+const STATUSES = ['New', 'Preparing', 'Ready', 'Done']
+const PAY_STEPS = ['Connecting…', 'Reading card…', 'Contacting bank…', 'Authorizing…']
+const GREETINGS = [
+  (c) => `Welcome to ${c.store}! I'm ${c.server} — what can I get started for you? 😊`,
+  (c) => `Hi there! ${c.server} here at ${c.store}. What would you like today? 🍔`,
+  (c) => `Howdy! Thanks for stopping by ${c.store}. I'm ${c.server} — what can I get for you? 🎈`,
+  (c) => `Good to see you! I'm ${c.server} and I'll be taking care of you. What sounds good today? 🌟`,
+]
+
 // --- State --------------------------------------------------------------
 const load = (k, fallback) => JSON.parse(localStorage.getItem(k)) ?? fallback
 const save = (k, v) => localStorage.setItem(k, JSON.stringify(v))
 
 let config = { ...DEFAULTS, ...load('pos-config', {}) }
 let cart = load('pos-cart', [])
-let paid = false
+let orders = load('pos-orders', [])
+let view = 'order'
 let pending = null // item awaiting modifier selection
+let paying = false
 
 const $ = (id) => document.getElementById(id)
 const money = (n) => config.currency + n.toFixed(2)
+const time = (t) => new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+const el = (tag, props = {}, kids = []) => {
+  const node = Object.assign(document.createElement(tag), props)
+  kids.forEach((k) => node.append(k))
+  return node
+}
 
 // --- Cart ---------------------------------------------------------------
 const lineTotal = (l) => (l.price + l.mods.reduce((s, m) => s + m.price, 0)) * l.qty
 const keyOf = (item, mods) => item.id + '|' + mods.map((m) => m.name).sort().join(',')
+const totals = () => {
+  const subtotal = cart.reduce((s, l) => s + lineTotal(l), 0)
+  const tax = subtotal * (config.taxRate / 100)
+  return { subtotal, tax, total: subtotal + tax }
+}
 
 const addToCart = (item, mods = []) => {
-  if (paid) newOrder()
   const key = keyOf(item, mods)
   const found = cart.find((l) => l.key === key)
   if (found) found.qty++
   else cart.push({ emoji: item.emoji, key, mods, name: item.name, price: item.price, qty: 1 })
-  persist()
+  persistCart()
 }
 
 const changeQty = (key, delta) => {
@@ -42,27 +63,39 @@ const changeQty = (key, delta) => {
   if (!l) return
   l.qty += delta
   if (l.qty < 1) cart = cart.filter((x) => x.key !== key)
-  persist()
+  persistCart()
 }
 
-const newOrder = () => {
-  cart = []
-  paid = false
-  persist()
-}
-
-const persist = () => {
+const persistCart = () => {
   save('pos-cart', cart)
   render()
 }
 
-// --- Rendering ----------------------------------------------------------
-const el = (tag, props = {}, kids = []) => {
-  const node = Object.assign(document.createElement(tag), props)
-  kids.forEach((k) => node.append(k))
-  return node
+const commitOrder = (method) => {
+  const { subtotal, tax, total } = totals()
+  orders.push({ items: cart, method, no: config.orderNo, server: config.server, status: 'New', subtotal, tax, time: new Date().toISOString(), total })
+  save('pos-orders', orders)
+  config.orderNo = Number(config.orderNo) + 1
+  save('pos-config', config)
+  cart = []
+  save('pos-cart', cart)
 }
 
+// --- Views --------------------------------------------------------------
+const setView = (v) => {
+  view = v
+  if (v !== 'payment') paying = false
+  render()
+}
+
+const render = () => {
+  $('brand').textContent = config.store
+  document.querySelectorAll('#views button').forEach((b) => b.classList.toggle('active', b.dataset.view === view))
+  document.querySelectorAll('.view').forEach((v) => (v.hidden = v.id !== 'view-' + view))
+  ;({ finance: renderFinance, kitchen: renderKitchen, order: renderOrder, payment: renderPayment }[view] || renderOrder)()
+}
+
+// --- Order (server) -----------------------------------------------------
 const renderMenu = () => {
   const grid = $('grid')
   grid.replaceChildren()
@@ -81,11 +114,10 @@ const renderMenu = () => {
   })
 }
 
-const renderReceipt = () => {
+const renderOrder = () => {
+  $('greeting').textContent = GREETINGS[config.orderNo % GREETINGS.length](config)
   const box = $('receipt')
   box.replaceChildren()
-  const now = new Date()
-
   box.append(el('div', { className: 'r-head' }, [
     el('div', { className: 'store', textContent: config.store }),
     el('div', { className: 'r-meta', textContent: config.location }),
@@ -94,7 +126,7 @@ const renderReceipt = () => {
   box.append(el('hr', { className: 'r-rule' }))
   box.append(el('div', { className: 'r-meta', textContent: `Order #${config.orderNo}` }))
   box.append(el('div', { className: 'r-meta', textContent: `Server: ${config.server}` }))
-  box.append(el('div', { className: 'r-meta', textContent: now.toLocaleString() }))
+  box.append(el('div', { className: 'r-meta', textContent: new Date().toLocaleString() }))
   box.append(el('hr', { className: 'r-rule' }))
 
   if (!cart.length) {
@@ -108,43 +140,23 @@ const renderReceipt = () => {
       el('span', { textContent: `${l.emoji} ${l.name}` }),
       el('span', { className: 'r-amt', textContent: money(lineTotal(l)) }),
     ])
-    l.mods.forEach((m) =>
-      line.append(el('span', { className: 'r-mod', textContent: `+ ${m.name}${m.price ? ' ' + money(m.price) : ''}` })),
-    )
-    if (!paid)
-      line.append(el('div', { className: 'r-controls' }, [
-        el('button', { onclick: () => changeQty(l.key, -1), textContent: '−' }),
-        el('button', { onclick: () => changeQty(l.key, 1), textContent: '+' }),
-      ]))
+    l.mods.forEach((m) => line.append(el('span', { className: 'r-mod', textContent: `+ ${m.name}${m.price ? ' ' + money(m.price) : ''}` })))
+    line.append(el('div', { className: 'r-controls' }, [
+      el('button', { onclick: () => changeQty(l.key, -1), textContent: '−' }),
+      el('button', { onclick: () => changeQty(l.key, 1), textContent: '+' }),
+    ]))
     box.append(line)
   })
 
-  const subtotal = cart.reduce((s, l) => s + lineTotal(l), 0)
-  const tax = subtotal * (config.taxRate / 100)
+  const { subtotal, tax, total } = totals()
   box.append(el('hr', { className: 'r-rule' }))
   box.append(el('div', { className: 'r-totals' }, [
     el('div', {}, [el('span', { textContent: 'Subtotal' }), el('span', { textContent: money(subtotal) })]),
     el('div', {}, [el('span', { textContent: `Tax (${config.taxRate}%)` }), el('span', { textContent: money(tax) })]),
-    el('div', { className: 'r-grand' }, [el('span', { textContent: 'Total' }), el('span', { textContent: money(subtotal + tax) })]),
+    el('div', { className: 'r-grand' }, [el('span', { textContent: 'Total' }), el('span', { textContent: money(total) })]),
   ]))
-
-  if (paid) box.append(el('div', { className: 'paid', textContent: 'PAID ✅' }))
   box.append(el('hr', { className: 'r-rule' }))
   box.append(el('div', { className: 'r-foot', textContent: config.footer }))
-}
-
-const GREETINGS = [
-  (c) => `Welcome to ${c.store}! I'm ${c.server} — what can I get started for you? 😊`,
-  (c) => `Hi there! ${c.server} here at ${c.store}. What would you like today? 🍔`,
-  (c) => `Howdy! Thanks for stopping by ${c.store}. I'm ${c.server} — what can I get for you? 🎈`,
-  (c) => `Good to see you! I'm ${c.server} and I'll be taking care of you. What sounds good today? 🌟`,
-]
-
-const render = () => {
-  $('brand').textContent = config.store
-  $('greeting').textContent = GREETINGS[config.orderNo % GREETINGS.length](config)
-  $('charge-btn').textContent = paid ? 'New order' : 'Charge'
-  renderReceipt()
 }
 
 // --- Modifier sheet -----------------------------------------------------
@@ -174,19 +186,149 @@ $('mod-add').onclick = () => {
 }
 $('mod-cancel').onclick = () => ($('mod-overlay').hidden = true)
 
-// --- Actions ------------------------------------------------------------
-$('charge-btn').onclick = () => {
-  if (paid) return newOrder()
-  if (!cart.length) return
-  paid = true
-  render()
-  config.orderNo = Number(config.orderNo) + 1
-  save('pos-config', config)
+// --- Payment (customer) -------------------------------------------------
+const ding = () => {
+  const Ctx = window.AudioContext || window.webkitAudioContext
+  const ctx = new Ctx()
+  const beep = (freq, at, dur) => {
+    const o = ctx.createOscillator()
+    const g = ctx.createGain()
+    o.connect(g).connect(ctx.destination)
+    o.frequency.value = freq
+    g.gain.setValueAtTime(0.0001, ctx.currentTime + at)
+    g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + at + 0.02)
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + at + dur)
+    o.start(ctx.currentTime + at)
+    o.stop(ctx.currentTime + at + dur)
+  }
+  beep(660, 0, 0.15)
+  beep(990, 0.13, 0.35)
 }
 
-$('clear-btn').onclick = newOrder
+const renderPayment = () => {
+  const root = $('view-payment')
+  root.replaceChildren()
+  if (!cart.length) {
+    root.append(el('div', { className: 'r-empty', textContent: 'No active order — add items on the Order screen.' }))
+    return
+  }
+  const status = el('div', { className: 'pay-status' })
+  const tap = el('button', { className: 'pay-tap' }, [el('span', { textContent: '📱💳' }), el('div', { textContent: 'Tap to Pay' })])
+  tap.onclick = () => startPayment(tap, status)
+  root.append(el('div', { className: 'pay-label', textContent: 'Amount due' }))
+  root.append(el('div', { className: 'pay-amount', textContent: money(totals().total) }))
+  root.append(tap)
+  root.append(status)
+}
 
-// --- Settings -----------------------------------------------------------
+const startPayment = (tap, status) => {
+  if (paying) return
+  paying = true
+  tap.disabled = true
+  let i = 0
+  const step = () => {
+    if (i < PAY_STEPS.length) {
+      status.textContent = PAY_STEPS[i++]
+      setTimeout(step, 800)
+    } else {
+      status.className = 'pay-approved'
+      status.textContent = 'Approved ✅'
+      ding()
+      setTimeout(() => {
+        commitOrder('Contactless')
+        paying = false
+        setView('kitchen')
+      }, 1800)
+    }
+  }
+  step()
+}
+
+// --- Kitchen (cook) -----------------------------------------------------
+const advanceStatus = (no) => {
+  const o = orders.find((x) => x.no === no)
+  if (!o) return
+  o.status = STATUSES[Math.min(STATUSES.indexOf(o.status) + 1, STATUSES.length - 1)]
+  save('pos-orders', orders)
+  render()
+}
+
+const renderKitchen = () => {
+  const root = $('view-kitchen')
+  root.replaceChildren()
+  const active = orders.filter((o) => o.status !== 'Done')
+  if (!active.length) {
+    root.append(el('div', { className: 'kds-empty', textContent: 'NO ACTIVE ORDERS' }))
+    return
+  }
+  const cols = el('div', { id: 'kds' })
+  active.forEach((o) => {
+    const items = el('div', { className: 'kds-items' })
+    o.items.forEach((l) => {
+      items.append(el('div', { className: 'kds-item', textContent: `${l.qty} ${l.name}` }))
+      l.mods.forEach((m) => items.append(el('div', { className: 'kds-mod', textContent: `+ ${m.name}` })))
+    })
+    cols.append(el('div', { className: `kds-col s-${o.status.toLowerCase()}` }, [
+      el('div', { className: 'kds-head' }, [
+        el('span', { className: 'kds-no', textContent: `#${o.no}` }),
+        el('span', { className: 'kds-time', textContent: time(o.time) }),
+      ]),
+      items,
+      el('button', { className: 'kds-bump', onclick: () => advanceStatus(o.no), textContent: o.status }),
+    ]))
+  })
+  root.append(cols)
+}
+
+// --- Finance (owner) ----------------------------------------------------
+const stat = (big, label) => el('div', { className: 'fin-stat' }, [el('div', { className: 'big', textContent: big }), el('div', { className: 'label', textContent: label })])
+const row = (cell, vals) => el('tr', {}, vals.map((v) => el(cell, { textContent: v })))
+
+const renderFinance = () => {
+  const root = $('view-finance')
+  root.replaceChildren()
+  const today = new Date().toDateString()
+  const todays = orders.filter((o) => new Date(o.time).toDateString() === today)
+  const revenue = todays.reduce((s, o) => s + o.total, 0)
+  const tax = todays.reduce((s, o) => s + o.tax, 0)
+
+  root.append(el('div', { className: 'fin-summary' }, [
+    stat(money(revenue), "Today's revenue"),
+    stat(String(todays.length), 'Orders'),
+    stat(money(tax), 'Tax collected'),
+  ]))
+
+  if (todays.length) {
+    const tbody = el('tbody')
+    todays.slice().reverse().forEach((o) => {
+      const count = o.items.reduce((s, l) => s + l.qty, 0)
+      tbody.append(row('td', [`#${o.no}`, time(o.time), o.server, `${count} item${count === 1 ? '' : 's'}`, o.method, o.status, money(o.total)]))
+    })
+    root.append(el('table', { className: 'fin-table' }, [
+      el('thead', {}, [row('th', ['#', 'Time', 'Server', 'Items', 'Payment', 'Status', 'Total'])]),
+      tbody,
+    ]))
+  } else {
+    root.append(el('div', { className: 'fin-empty', textContent: 'No orders yet today.' }))
+  }
+
+  root.append(el('div', { className: 'fin-actions' }, [
+    el('button', {
+      className: 'ghost',
+      onclick: () => confirm('Clear all recorded orders? This cannot be undone.') && ((orders = []), save('pos-orders', orders), render()),
+      textContent: 'Clear all orders',
+    }),
+  ]))
+}
+
+// --- Actions & settings -------------------------------------------------
+$('views').onclick = (e) => e.target.dataset.view && setView(e.target.dataset.view)
+$('charge-btn').onclick = () => cart.length && setView('payment')
+$('clear-btn').onclick = () => {
+  cart = []
+  persistCart()
+}
+
 const form = $('settings-form')
 
 $('settings-btn').onclick = () => {
@@ -201,16 +343,16 @@ $('settings-save').onclick = () => {
   })
   save('pos-config', config)
   $('settings-overlay').hidden = true
-  render()
   renderMenu()
+  render()
 }
 
 $('settings-reset').onclick = () => {
   config = { ...DEFAULTS }
   save('pos-config', config)
   Object.keys(DEFAULTS).forEach((k) => (form.elements[k].value = config[k]))
-  render()
   renderMenu()
+  render()
 }
 
 // --- Boot ---------------------------------------------------------------

@@ -8,23 +8,35 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>" />
 </head>
 <body>
-  <main id="pos">
-    <section id="menu">
-      <header id="menu-bar">
-        <h1>🛒 <span id="brand">Little Shop</span></h1>
-        <button id="settings-btn" title="Settings">⚙️</button>
-      </header>
-      <p id="greeting"></p>
-      <div id="grid"></div>
+  <header id="topbar">
+    <h1 id="title">🛒 <span id="brand">Little Shop</span></h1>
+    <nav id="views">
+      <button data-view="order">Order</button>
+      <button data-view="payment">Payment</button>
+      <button data-view="kitchen">Kitchen</button>
+      <button data-view="finance">Finance</button>
+    </nav>
+    <button id="settings-btn" title="Settings">⚙️</button>
+  </header>
+
+  <main id="main">
+    <section id="view-order" class="view">
+      <div id="menu">
+        <p id="greeting"></p>
+        <div id="grid"></div>
+      </div>
+      <aside id="receipt-panel">
+        <div id="receipt"></div>
+        <div id="actions">
+          <button id="clear-btn" class="ghost">Clear</button>
+          <button id="charge-btn">Charge</button>
+        </div>
+      </aside>
     </section>
 
-    <aside id="receipt-panel">
-      <div id="receipt"></div>
-      <div id="actions">
-        <button id="clear-btn" class="ghost">Clear</button>
-        <button id="charge-btn">Charge</button>
-      </div>
-    </aside>
+    <section id="view-payment" class="view" hidden></section>
+    <section id="view-kitchen" class="view" hidden></section>
+    <section id="view-finance" class="view" hidden></section>
   </main>
 
   <!-- Modifier picker -->

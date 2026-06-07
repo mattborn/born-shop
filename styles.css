@@ -17,30 +17,76 @@
 body {
   background: var(--bg);
   color: var(--ink);
+  display: flex;
+  flex-direction: column;
   font: 16px/1.4 system-ui, sans-serif;
   height: 100dvh;
   overflow: hidden;
 }
 
-#pos {
+#topbar {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  padding-top: calc(0.75rem + env(safe-area-inset-top));
+}
+
+#views {
+  display: flex;
+  gap: 0.25rem;
+  margin-right: auto;
+}
+
+#views button {
+  background: transparent;
+  color: var(--muted);
+  padding: 0.5rem 0.875rem;
+}
+
+#views button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+#views button:hover {
+  background: var(--line);
+  color: var(--ink);
+}
+
+#views button.active:hover {
+  background: var(--accent-dark);
+  color: #fff;
+}
+
+#main {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.view {
+  inset: 0;
+  overflow: hidden;
+  padding: 1rem;
+  position: absolute;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+#view-order {
   display: grid;
   gap: 1rem;
   grid-template-columns: 1fr 22rem;
-  height: 100dvh;
-  padding: 1rem;
 }
 
 #menu {
   display: flex;
   flex-direction: column;
   min-height: 0;
-}
-
-#menu-bar {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
 }
 
 h1 {
@@ -241,17 +287,6 @@ h1 {
   text-align: center;
 }
 
-.paid {
-  border: 2px solid var(--accent);
-  border-radius: 0.5rem;
-  color: var(--accent);
-  font-weight: 700;
-  margin: 0.75rem auto;
-  padding: 0.25rem 0.75rem;
-  transform: rotate(-4deg);
-  width: fit-content;
-}
-
 #actions {
   border-top: 1px solid var(--line);
   display: grid;
@@ -294,10 +329,6 @@ button:hover {
   justify-content: center;
   padding: 1rem;
   position: fixed;
-}
-
-.overlay[hidden] {
-  display: none;
 }
 
 .sheet {
@@ -368,8 +399,213 @@ input {
   justify-content: flex-end;
 }
 
+/* Payment (customer) */
+#view-payment {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.pay-label {
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.pay-amount {
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.pay-tap {
+  align-items: center;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  font-size: 1.25rem;
+  gap: 0.5rem;
+  height: 14rem;
+  justify-content: center;
+  margin: 2rem 0;
+  width: 14rem;
+}
+
+.pay-tap span {
+  font-size: 3.5rem;
+}
+
+.pay-status {
+  color: var(--muted);
+  font-size: 1.25rem;
+  min-height: 2rem;
+}
+
+.pay-approved {
+  color: var(--accent);
+  font-size: 2rem;
+  font-weight: 700;
+  min-height: 2rem;
+}
+
+/* Kitchen display (cook) */
+#view-finance {
+  overflow-y: auto;
+}
+
+#view-kitchen {
+  background: #0b0f1a;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0;
+}
+
+#kds {
+  display: flex;
+  gap: 1px;
+  height: 100%;
+  min-width: min-content;
+}
+
+.kds-col {
+  background: #11182a;
+  border-top: 0.5rem solid var(--muted);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  width: 18rem;
+}
+
+.kds-col.s-new {
+  border-top-color: #ef4444;
+}
+
+.kds-col.s-preparing {
+  border-top-color: #f59e0b;
+}
+
+.kds-col.s-ready {
+  border-top-color: #22c55e;
+}
+
+.kds-head {
+  align-items: baseline;
+  border-bottom: 1px solid #1e293b;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.kds-no {
+  font-size: 2.5rem;
+  font-weight: 800;
+}
+
+.kds-time {
+  color: #94a3b8;
+  font-size: 1.25rem;
+}
+
+.kds-items {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.kds-item {
+  font-size: 1.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.kds-mod {
+  color: #facc15;
+  font-size: 1.25rem;
+  padding-left: 1.5rem;
+  text-transform: uppercase;
+}
+
+.kds-bump {
+  background: #1e293b;
+  border-radius: 0;
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+  padding: 1.25rem;
+  text-transform: uppercase;
+}
+
+.kds-bump:hover {
+  background: #334155;
+}
+
+.kds-empty {
+  color: #475569;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding-top: 4rem;
+  text-align: center;
+}
+
+/* Finance (owner) */
+.fin-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.fin-stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  flex: 1;
+  min-width: 8rem;
+  padding: 1rem;
+}
+
+.fin-stat .big {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.fin-stat .label {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.fin-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.fin-table th,
+.fin-table td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.fin-table th {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.fin-actions {
+  margin-top: 1rem;
+}
+
+.fin-empty {
+  color: var(--muted);
+  padding: 2rem;
+  text-align: center;
+}
+
 @media (max-width: 720px) {
-  #pos {
+  #view-order {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 1fr;
     overflow-y: auto;
