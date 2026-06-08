@@ -1,0 +1,57 @@
+[
+  {
+    "color": "#16a34a",
+    "emoji": "🍳",
+    "id": "diner",
+    "locked": true,
+    "name": "Default Diner",
+    "categories": [
+      {
+        "items": [
+          { "cost": 0.25, "emoji": "☕", "id": "coffee", "mods": [{ "cost": 0.25, "name": "Cream", "price": 0, "stock": 10 }, { "cost": 0.25, "name": "Sugar", "price": 0, "stock": 10 }], "name": "Coffee", "sizes": [{ "name": "Small", "price": 2 }, { "name": "Medium", "price": 2.5 }, { "name": "Large", "price": 3 }], "stock": 10 },
+          { "choiceLabel": "Type", "choices": [{ "cost": 0.25, "name": "2%", "stock": 10 }, { "cost": 0.25, "name": "Whole", "stock": 10 }, { "cost": 0.25, "name": "Chocolate", "stock": 10 }], "emoji": "🥛", "id": "milk", "name": "Milk", "sizes": [{ "name": "Small", "price": 1 }, { "name": "Medium", "price": 1.5 }, { "name": "Large", "price": 2 }] },
+          { "cost": 0.25, "emoji": "🧃", "id": "oj", "name": "Orange Juice", "sizes": [{ "name": "Small", "price": 2 }, { "name": "Medium", "price": 2.5 }, { "name": "Large", "price": 3 }], "stock": 10 },
+          { "cost": 0.25, "emoji": "🥤", "id": "soda", "name": "Soda", "sizes": [{ "name": "Small", "price": 1.5 }, { "name": "Medium", "price": 2 }, { "name": "Large", "price": 2.5 }], "stock": 10 },
+          { "cost": 0.25, "emoji": "🫧", "id": "sparkling", "name": "Sparkling Water", "sizes": [{ "name": "Small", "price": 1.5 }, { "name": "Medium", "price": 2 }, { "name": "Large", "price": 2.5 }], "stock": 10 },
+          { "cost": 0.25, "emoji": "🍵", "id": "tea", "name": "Tea", "sizes": [{ "name": "Small", "price": 1.5 }, { "name": "Medium", "price": 2 }, { "name": "Large", "price": 2.5 }], "stock": 10 },
+          { "emoji": "💧", "id": "water", "name": "Water", "sizes": [{ "name": "Small", "price": 0 }, { "name": "Medium", "price": 0 }, { "name": "Large", "price": 0 }] }
+        ],
+        "name": "Drinks"
+      },
+      {
+        "items": [
+          { "cost": 0.25, "emoji": "⭐", "id": "special", "name": "Daily Special", "price": 7.5, "stock": 10 },
+          { "cost": 0.25, "emoji": "🫓", "id": "biscuits", "name": "Biscuits & Gravy", "price": 5, "stock": 10 },
+          { "cost": 0.25, "emoji": "🧀", "id": "cheeseburger", "mods": [{ "cost": 0.25, "name": "Lettuce", "price": 0, "stock": 10 }, { "cost": 0.25, "name": "Tomato", "price": 0, "stock": 10 }, { "cost": 0.25, "name": "Pickles", "price": 0, "stock": 10 }, { "cost": 0.25, "name": "Mushrooms", "price": 0.5, "stock": 10 }], "name": "Cheeseburger", "price": 6.5, "stock": 10 },
+          { "cost": 0.25, "emoji": "🍔", "id": "hamburger", "mods": [{ "cost": 0.25, "name": "Lettuce", "price": 0, "stock": 10 }, { "cost": 0.25, "name": "Tomato", "price": 0, "stock": 10 }, { "cost": 0.25, "name": "Pickles", "price": 0, "stock": 10 }, { "cost": 0.25, "name": "Mushrooms", "price": 0.5, "stock": 10 }, { "cost": 0.25, "name": "Cheese", "price": 0.5, "stock": 10 }], "name": "Hamburger", "price": 6, "stock": 10 },
+          { "cost": 0.25, "emoji": "🥞", "id": "pancakes", "name": "Pancakes", "price": 5.5, "stock": 10 },
+          { "cost": 0.25, "emoji": "🍕", "id": "pizza", "mods": [{ "cost": 0.25, "name": "Cheese", "price": 0.5, "stock": 10 }, { "cost": 0.25, "name": "Pepperoni", "price": 1, "stock": 10 }, { "cost": 0.25, "name": "Sausage", "price": 1, "stock": 10 }], "name": "Pizza", "sizes": [{ "name": "Slice", "price": 3 }, { "name": "Whole", "price": 12 }], "stock": 10 },
+          { "choiceLabel": "Flavor", "choices": [{ "cost": 0.25, "name": "Chicken Noodle", "stock": 10 }, { "cost": 0.25, "name": "Tomato", "stock": 10 }, { "cost": 0.25, "name": "Soup of the Day", "stock": 10 }], "emoji": "🍲", "id": "soup", "name": "Soup", "sizes": [{ "name": "Cup", "price": 3 }, { "name": "Bowl", "price": 5 }] }
+        ],
+        "name": "Mains"
+      },
+      {
+        "items": [
+          { "cost": 0.25, "emoji": "🍎", "id": "apples", "name": "Apple Slices", "price": 2.5, "stock": 10 },
+          { "cost": 0.25, "emoji": "🥓", "id": "bacon", "name": "Bacon", "price": 3, "stock": 10 },
+          { "choiceLabel": "Toasting", "choices": [{ "name": "Not Toasted" }, { "name": "Lightly Toasted" }, { "name": "Toasted" }], "cost": 0.25, "emoji": "🥯", "id": "bagel", "mods": [{ "cost": 0.25, "name": "Butter", "price": 0, "stock": 10 }, { "cost": 0.25, "name": "Plain Cream Cheese", "price": 0.5, "stock": 10 }, { "cost": 0.25, "name": "Strawberry Cream Cheese", "price": 0.5, "stock": 10 }], "name": "Bagel", "price": 2.5, "stock": 10 },
+          { "cost": 0.25, "emoji": "🍳", "id": "eggs", "name": "Eggs", "price": 2.5, "stock": 10 },
+          { "cost": 0.25, "emoji": "🍓", "id": "fruit", "name": "Fruit", "price": 3, "stock": 10 },
+          { "cost": 0.25, "emoji": "🥖", "id": "garlicbread", "name": "Garlic Bread", "price": 3.5, "stock": 10 },
+          { "choiceLabel": "Style", "choices": [{ "name": "Baked" }, { "name": "Diced" }, { "name": "Mashed" }], "cost": 0.25, "emoji": "🥔", "id": "potatoes", "name": "Potatoes", "price": 3.5, "stock": 10 },
+          { "cost": 0.25, "emoji": "🍞", "id": "toast", "name": "Toast", "price": 2, "stock": 10 },
+          { "cost": 0.25, "emoji": "🥦", "id": "veggies", "name": "Veggies", "price": 3, "stock": 10 }
+        ],
+        "name": "Sides"
+      },
+      {
+        "items": [
+          { "choiceLabel": "Flavor", "choices": [{ "cost": 0.25, "name": "Vanilla", "stock": 10 }, { "cost": 0.25, "name": "Chocolate", "stock": 10 }, { "cost": 0.25, "name": "Strawberry", "stock": 10 }], "emoji": "🍨", "id": "icecream", "name": "Ice Cream", "sizes": [{ "name": "1 Scoop", "price": 2 }, { "name": "2 Scoops", "price": 3 }, { "name": "3 Scoops", "price": 4 }] },
+          { "cost": 0.25, "emoji": "🍪", "id": "macaroons", "name": "Macaroons", "price": 4, "stock": 10 },
+          { "cost": 0.25, "emoji": "🧁", "id": "minicake", "name": "Mini Cake", "price": 3.5, "stock": 10 }
+        ],
+        "name": "Sweets"
+      }
+    ]
+  }
+]

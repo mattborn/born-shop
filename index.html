@@ -8,15 +8,20 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛒</text></svg>" />
 </head>
 <body>
+  <section id="landing" hidden>
+    <h1 id="landing-title">🛒 Pick a Menu</h1>
+    <div id="landing-grid"></div>
+  </section>
+
   <header id="topbar">
+    <button id="home-btn" title="Switch menu">←</button>
     <h1 id="title">🛒 <span id="brand">Little Shop</span></h1>
     <nav id="views">
       <button data-view="order">Order</button>
       <button data-view="payment">Payment</button>
       <button data-view="kitchen">Kitchen</button>
-      <button data-view="finance">Finance</button>
+      <button data-view="business">Business</button>
     </nav>
-    <button id="settings-btn" title="Settings">⚙️</button>
   </header>
 
   <main id="main">
@@ -27,6 +32,7 @@
       </div>
       <aside id="receipt-panel">
         <div id="receipt"></div>
+        <div id="order-totals" hidden></div>
         <div id="actions">
           <button id="clear-btn" class="ghost">Clear</button>
           <button id="charge-btn">Charge</button>
@@ -36,7 +42,13 @@
 
     <section id="view-payment" class="view" hidden></section>
     <section id="view-kitchen" class="view" hidden></section>
-    <section id="view-finance" class="view" hidden></section>
+    <section id="view-business" class="view" hidden>
+      <div id="biz-bar">
+        <nav id="biz-tabs"></nav>
+        <div id="biz-actions"></div>
+      </div>
+      <div id="biz-content"></div>
+    </section>
   </main>
 
   <!-- Modifier picker -->
@@ -51,23 +63,18 @@
     </div>
   </div>
 
-  <!-- Settings -->
-  <div id="settings-overlay" class="overlay" hidden>
+  <!-- New menu -->
+  <div id="new-overlay" class="overlay" hidden>
     <div class="sheet">
-      <h2>⚙️ Settings</h2>
-      <form id="settings-form">
-        <label>Store name <input name="store" /></label>
-        <label>Server name <input name="server" /></label>
-        <label>Location <input name="location" /></label>
-        <label>Phone <input name="phone" /></label>
-        <label>Tax rate (%) <input name="taxRate" type="number" step="0.001" min="0" /></label>
-        <label>Currency symbol <input name="currency" maxlength="3" /></label>
-        <label>Next order # <input name="orderNo" type="number" min="1" /></label>
-        <label>Receipt footer <input name="footer" /></label>
+      <h2>🍴 New Menu</h2>
+      <form id="new-form">
+        <label>Menu name <input name="name" placeholder="e.g. Bella's Bistro" /></label>
+        <label>Icon <input name="emoji" maxlength="4" /></label>
+        <label>Based on <select name="base"></select></label>
       </form>
       <div class="sheet-actions">
-        <button id="settings-reset" class="ghost" type="button">Reset defaults</button>
-        <button id="settings-save" type="button">Save</button>
+        <button id="new-cancel" class="ghost" type="button">Cancel</button>
+        <button id="new-create" type="button">Create</button>
       </div>
     </div>
   </div>
