@@ -62,7 +62,8 @@ let stock = {} // stockUnitId -> count; absent means unlimited
 let purchases = [] // replenishment invoices
 let selectedInvoice = null // invoice no shown on the Purchases tab
 let checkoutAt = null // timestamp captured when Charge is pressed
-let payment = null // card/auth details generated when a payment is approved
+let payment = null // card/auth or cash details generated when a payment is approved
+let payMethod = null // 'cash' | 'card' chosen on the payment screen
 
 const saveCart = () => save(skey('pos-cart'), cart)
 const saveOrders = () => save(skey('pos-orders'), orders)
@@ -165,6 +166,7 @@ const commitOrder = (method, tipAmt = 0) => {
   tip = 0
   tipKey = 0
   payment = null
+  payMethod = null
 }
 
 // --- Views --------------------------------------------------------------
@@ -179,6 +181,7 @@ const render = () => {
   $('topbar').hidden = !active
   $('main').hidden = !active
   if (!active) return renderLanding()
+  $('brand-emoji').textContent = findMenu(active)?.emoji ?? '🛒'
   $('brand').textContent = config.store
   document.querySelectorAll('#views button').forEach((b) => b.classList.toggle('active', b.dataset.view === view))
   document.querySelectorAll('.view').forEach((v) => (v.hidden = v.id !== 'view-' + view))
@@ -356,9 +359,14 @@ const buildReceipt = (box, { editable = false, full = false, tipAmt = 0, pay = n
     box.append(totalsBlock({ full: true, tipAmt }))
     if (pay) {
       box.append(el('hr', { className: 'r-rule' }))
-      box.append(el('div', { className: 'r-pay' }, [el('span', { textContent: `${pay.brand} ••${pay.last4}` }), el('span', { textContent: pay.entry })]))
-      box.append(el('div', { className: 'r-pay' }, [el('span', { className: 'r-approved', textContent: 'APPROVED' }), el('span', { textContent: `Auth ${pay.auth}` })]))
-      box.append(el('div', { className: 'r-pay', textContent: `Ref # ${pay.txn}` }))
+      if (pay.cash) {
+        box.append(el('div', { className: 'r-pay' }, [el('span', { textContent: 'Cash' }), el('span', { textContent: money(pay.tendered) })]))
+        box.append(el('div', { className: 'r-pay' }, [el('span', { className: 'r-approved', textContent: 'Change' }), el('span', { textContent: money(pay.change) })]))
+      } else {
+        box.append(el('div', { className: 'r-pay' }, [el('span', { textContent: `${pay.brand} ••${pay.last4}` }), el('span', { textContent: pay.entry })]))
+        box.append(el('div', { className: 'r-pay' }, [el('span', { className: 'r-approved', textContent: 'APPROVED' }), el('span', { textContent: `Auth ${pay.auth}` })]))
+        box.append(el('div', { className: 'r-pay', textContent: `Ref # ${pay.txn}` }))
+      }
     }
     box.append(el('hr', { className: 'r-rule' }))
     box.append(el('div', { className: 'r-foot', textContent: config.footer }))
@@ -501,11 +509,57 @@ const renderPayment = () => {
   }
 
   const status = el('div', { className: 'pay-status' })
-  const tap = el('button', { className: 'pay-tap' }, [el('span', { textContent: '📱💳' }), el('div', { textContent: 'Tap to Pay' })])
-  tap.onclick = () => startPayment(receipt, tap, status)
-  side.append(tap, status)
+  side.append(
+    el('div', { className: 'pay-tip-label', textContent: 'How would you like to pay?' }),
+    el('div', { className: 'pay-methods' }, [
+      el('button', { className: 'pay-method' + (payMethod === 'cash' ? ' on' : ''), onclick: () => !paying && ((payMethod = 'cash'), renderPayment()), textContent: '💵 Cash' }),
+      el('button', { className: 'pay-method' + (payMethod === 'card' ? ' on' : ''), onclick: () => !paying && ((payMethod = 'card'), renderPayment()), textContent: '💳 Card' }),
+    ]),
+  )
+
+  if (payMethod === 'card') {
+    const tap = el('button', { className: 'pay-tap' }, [el('span', { textContent: '📱💳' }), el('div', { textContent: 'Tap to Pay' })])
+    tap.onclick = () => startPayment(receipt, tap, status)
+    side.append(tap, status)
+  } else if (payMethod === 'cash') {
+    const due = round(totals().total + tip)
+    const cash = el('div', { className: 'pay-cash' })
+    ;[
+      ['Exact', due],
+      ['$5', 5],
+      ['$10', 10],
+      ['$20', 20],
+      ['$50', 50],
+      ['$100', 100],
+    ].forEach(([label, amt]) => {
+      const valid = amt >= due
+      const b = el('button', { className: 'pay-cash-btn', disabled: !valid, textContent: label })
+      if (valid) b.onclick = () => payCash(amt, receipt, status)
+      cash.append(b)
+    })
+    side.append(cash, status)
+  } else {
+    side.append(status)
+  }
 
   root.append(receipt, side)
+}
+
+const payCash = (tendered, receipt, status) => {
+  if (paying) return
+  paying = true
+  const due = round(totals().total + tip)
+  const change = round(tendered - due)
+  payment = { cash: true, change, tendered: round(tendered) }
+  buildReceipt(receipt, { full: true, pay: payment, tipAmt: tip })
+  status.className = 'pay-approved'
+  status.textContent = change > 0 ? `Change ${money(change)}` : 'Exact — no change'
+  ding()
+  setTimeout(() => {
+    commitOrder('Cash', tip)
+    paying = false
+    setView('kitchen')
+  }, 3000)
 }
 
 const startPayment = (receipt, tap, status) => {
@@ -754,6 +808,8 @@ $('views').onclick = (e) => e.target.dataset.view && setView(e.target.dataset.vi
 $('charge-btn').onclick = () => {
   if (!cart.length) return
   checkoutAt = new Date().toISOString()
+  payment = null
+  payMethod = null
   setView('payment')
 }
 $('clear-btn').onclick = () => {

@@ -612,6 +612,49 @@ input {
   text-align: center;
 }
 
+.pay-methods {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pay-method {
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  min-width: 6rem;
+}
+
+.pay-method:hover {
+  background: var(--bg);
+}
+
+.pay-method.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.pay-cash {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.pay-cash-btn {
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.pay-cash-btn:hover:not(:disabled) {
+  background: var(--bg);
+}
+
+.pay-cash-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
 .pay-tap {
   align-items: center;
   border-radius: 50%;
