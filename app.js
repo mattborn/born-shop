@@ -124,21 +124,13 @@ const totals = () => {
   return { subtotal, tax, total: round(subtotal + tax) }
 }
 
-const addToCart = (item, { choice = null, mods = [], size = null } = {}) => {
+const addToCart = (item, { choice = null, mods = [], qty = 1, size = null } = {}) => {
   const labels = [size?.name, choice?.name].filter(Boolean)
   const key = `${item.id}|${[size?.name, choice?.name, ...mods.map((m) => m.name).sort()].filter(Boolean).join('|')}`
   const cost = (item.cost || 0) + (size?.cost || 0) + (choice?.cost || 0) + mods.reduce((s, m) => s + (m.cost || 0), 0)
   const found = cart.find((l) => l.key === key)
-  if (found) found.qty++
-  else cart.push({ choice: choice?.name ?? null, cost, emoji: item.emoji, itemId: item.id, key, mods, name: labels.length ? `${item.name} (${labels.join(', ')})` : item.name, price: size ? size.price : item.price, qty: 1, size: size?.name ?? null })
-  persistCart()
-}
-
-const changeQty = (key, delta) => {
-  const l = cart.find((x) => x.key === key)
-  if (!l) return
-  l.qty += delta
-  if (l.qty < 1) cart = cart.filter((x) => x.key !== key)
+  if (found) found.qty += qty
+  else cart.push({ choice: choice?.name ?? null, cost, emoji: item.emoji, itemId: item.id, key, mods, name: labels.length ? `${item.name} (${labels.join(', ')})` : item.name, price: size ? size.price : item.price, qty, size: size?.name ?? null })
   persistCart()
 }
 
@@ -340,17 +332,13 @@ const buildReceipt = (box, { editable = false, full = false, tipAmt = 0, pay = n
   }
 
   cart.forEach((l) => {
-    const line = el('div', { className: 'r-line' }, [
+    const line = el('div', { className: 'r-line' + (editable ? ' editable' : '') }, [
       el('span', { className: 'r-qty', textContent: `${l.qty}×` }),
       el('span', { textContent: `${l.emoji} ${l.name}` }),
       el('span', { className: 'r-amt', textContent: money(lineTotal(l)) }),
     ])
     l.mods.forEach((m) => line.append(el('span', { className: 'r-mod', textContent: `+ ${m.name}${m.price ? ' ' + money(m.price) : ''}` })))
-    if (editable)
-      line.append(el('div', { className: 'r-controls' }, [
-        el('button', { onclick: () => changeQty(l.key, -1), textContent: '−' }),
-        el('button', { onclick: () => changeQty(l.key, 1), textContent: '+' }),
-      ]))
+    if (editable) line.onclick = () => editLine(l)
     box.append(line)
   })
 
@@ -384,11 +372,39 @@ const renderOrder = () => {
 }
 
 // --- Modifier sheet -----------------------------------------------------
+const findItem = (id) => MENU.flatMap((c) => c.items).find((i) => i.id === id)
+
+// Menu tile: one-tap add for plain items, otherwise open the modal to configure a new line.
 const pick = (item) => {
   if (!item.sizes && !item.choices && !item.mods) return addToCart(item)
-  const firstSize = item.sizes?.find((s) => left(optId(item.id, 'size', s.name)) > 0) ?? item.sizes?.[0] ?? null
-  const firstChoice = item.choices?.find((c) => left(optId(item.id, 'choice', c.name)) > 0) ?? item.choices?.[0] ?? null
-  pending = { choice: firstChoice, item, mods: new Set(), size: firstSize }
+  pending = {
+    choice: item.choices?.find((c) => left(optId(item.id, 'choice', c.name)) > 0) ?? item.choices?.[0] ?? null,
+    editKey: null,
+    item,
+    mods: new Set(),
+    qty: 1,
+    size: item.sizes?.find((s) => left(optId(item.id, 'size', s.name)) > 0) ?? item.sizes?.[0] ?? null,
+  }
+  openModal()
+}
+
+// Receipt line: reopen the modal pre-filled to edit that line.
+const editLine = (l) => {
+  const item = findItem(l.itemId)
+  if (!item) return
+  pending = {
+    choice: item.choices?.find((c) => c.name === l.choice) ?? null,
+    editKey: l.key,
+    item,
+    mods: new Set((item.mods || []).filter((m) => l.mods.some((lm) => lm.name === m.name))),
+    qty: l.qty,
+    size: item.sizes?.find((s) => s.name === l.size) ?? null,
+  }
+  openModal()
+}
+
+const openModal = () => {
+  const { item } = pending
   $('mod-title').textContent = `${item.emoji} ${item.name}`
   const list = $('mod-list')
   list.replaceChildren()
@@ -425,7 +441,7 @@ const pick = (item) => {
     list.append(el('div', { className: 'mod-group', textContent: 'Add-ons' }))
     item.mods.forEach((m) => {
       const out = left(optId(item.id, 'mod', m.name)) <= 0
-      const row = el('div', { className: 'mod-row' + (out ? ' sold' : '') }, [
+      const row = el('div', { className: 'mod-row' + (pending.mods.has(m) ? ' on' : '') + (out ? ' sold' : '') }, [
         el('span', { textContent: out ? `${m.name} — sold out` : m.name }),
         el('span', { className: 'mod-price', textContent: m.price ? '+' + money(m.price) : 'free' }),
       ])
@@ -437,11 +453,31 @@ const pick = (item) => {
       list.append(row)
     })
   }
+  list.append(el('div', { className: 'mod-group', textContent: 'Quantity' }))
+  const qty = el('input', { className: 'qty-val', inputMode: 'numeric', max: '99', min: '1', type: 'number', value: pending.qty })
+  const setQty = (n) => ((pending.qty = Math.min(99, Math.max(1, n))), (qty.value = pending.qty))
+  qty.oninput = () => {
+    pending.qty = Math.min(99, Math.max(1, Math.floor(Number(qty.value) || 1)))
+    if (Number(qty.value) > 99) qty.value = 99
+  }
+  list.append(el('div', { className: 'qty-row' }, [
+    el('button', { className: 'qty-btn', onclick: () => setQty(pending.qty - 1), textContent: '−' }),
+    qty,
+    el('button', { className: 'qty-btn', onclick: () => setQty(pending.qty + 1), textContent: '+' }),
+  ]))
+  $('mod-add').textContent = pending.editKey ? 'Update' : 'Add to order'
+  $('mod-remove').hidden = !pending.editKey
   $('mod-overlay').hidden = false
 }
 
 $('mod-add').onclick = () => {
-  addToCart(pending.item, { choice: pending.choice, mods: [...pending.mods], size: pending.size })
+  if (pending.editKey) cart = cart.filter((l) => l.key !== pending.editKey)
+  addToCart(pending.item, { choice: pending.choice, mods: [...pending.mods], qty: pending.qty, size: pending.size })
+  $('mod-overlay').hidden = true
+}
+$('mod-remove').onclick = () => {
+  cart = cart.filter((l) => l.key !== pending.editKey)
+  persistCart()
   $('mod-overlay').hidden = true
 }
 $('mod-cancel').onclick = () => ($('mod-overlay').hidden = true)
@@ -682,9 +718,34 @@ const saveSettings = () => {
   render()
 }
 
+// Count every inventory row (items + options) by status, matching what the table shows.
+const stockTally = () => {
+  const t = { low: 0, ok: 0, out: 0 }
+  const add = (id) => t[STATUS(id in stock ? stock[id] : Infinity).cls]++
+  MENU.forEach((cat) =>
+    cat.items.forEach((it) => {
+      add(it.id)
+      ;(it.sizes || []).forEach((s) => add(optId(it.id, 'size', s.name)))
+      ;(it.choices || []).forEach((c) => add(optId(it.id, 'choice', c.name)))
+      ;(it.mods || []).forEach((m) => add(optId(it.id, 'mod', m.name)))
+    }),
+  )
+  return t
+}
+
 // Each Business tab exposes its action buttons in the bar to the right of the sub-nav.
 const BIZ_ACTIONS = {
-  inventory: () => [el('button', { onclick: replenish, textContent: 'Replenish stock' })],
+  inventory: () => {
+    const t = stockTally()
+    return [
+      el('div', { className: 'inv-stats' }, [
+        el('span', { className: 'st-ok', textContent: `${t.ok} In stock` }),
+        el('span', { className: t.low ? 'st-low' : 'st-ok', textContent: `${t.low} Low stock` }),
+        el('span', { className: t.out ? 'st-out' : 'st-ok', textContent: `${t.out} Out of stock` }),
+      ]),
+      el('button', { onclick: replenish, textContent: 'Replenish stock' }),
+    ]
+  },
   orders: () => [el('button', { className: 'danger', onclick: clearOrders, textContent: 'Clear all orders' })],
   settings: () => [el('button', { className: 'ghost', onclick: resetSettings, textContent: 'Reset defaults' }), el('button', { onclick: saveSettings, textContent: 'Save' })],
 }

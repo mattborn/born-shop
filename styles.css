@@ -334,31 +334,13 @@ h1 {
   padding-left: 0.5rem;
 }
 
-.r-controls {
-  display: flex;
-  gap: 0.25rem;
-  grid-column: 1 / 4;
-  padding-top: 0.25rem;
-}
-
-.r-controls button {
-  align-items: center;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  border-radius: 0.25rem;
-  color: var(--ink);
+.r-line.editable {
+  border-radius: 0.5rem;
   cursor: pointer;
-  display: flex;
-  font-size: 1rem;
-  height: 1.5rem;
-  justify-content: center;
-  line-height: 1;
-  padding: 0;
-  width: 1.5rem;
 }
 
-.r-controls button:hover {
-  background: var(--line);
+.r-line.editable:hover {
+  background: var(--bg);
 }
 
 .r-totals div {
@@ -513,6 +495,51 @@ button:hover {
   color: var(--muted);
   cursor: default;
   opacity: 0.55;
+}
+
+.qty-row {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.qty-btn {
+  align-items: center;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  display: flex;
+  font-size: 1.25rem;
+  height: 2.5rem;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+  width: 2.5rem;
+}
+
+.qty-btn:hover {
+  background: var(--line);
+}
+
+.qty-val {
+  -webkit-appearance: none;
+  appearance: none;
+  field-sizing: content;
+  font-size: 1.25rem;
+  font-weight: 700;
+  height: 2.5rem;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.qty-val::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#mod-remove {
+  margin-right: auto;
 }
 
 .mod-row .mod-price {
@@ -969,6 +996,13 @@ input {
 
 .pur-tot {
   color: var(--muted);
+}
+
+.inv-stats {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  margin-right: 1rem;
 }
 
 .st-ok {
